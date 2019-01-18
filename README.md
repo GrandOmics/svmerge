@@ -1,1 +1,1 @@
-# A Structure Variation Merge Tool
+# A Structure Variation Merge Tool.
