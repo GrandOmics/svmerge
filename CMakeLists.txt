@@ -51,3 +51,31 @@ target_include_directories(test_read_vcf PUBLIC
 
 target_link_libraries(test_read_vcf ${CMAKE_CURRENT_SOURCE_DIR}/vendor/htslib/libhts.a z m bz2 lzma pthread)
 
+# add_executable(test_merge
+#     test/test_merge.cpp
+#     src/sv.cpp
+#     src/sv_vcf.cpp
+#     src/cluster.cpp
+#     src/bin_map.cpp)
+
+# target_include_directories(test_merge PUBLIC 
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vendor/htslib>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+#     $<INSTALL_INTERFACE:include>)
+
+# target_link_libraries(test_merge ${CMAKE_CURRENT_SOURCE_DIR}/vendor/htslib/libhts.a z m bz2 lzma pthread)
+
+add_executable(dbSV_merge
+    src/dbSV_merge.cpp
+    src/sv.cpp
+    src/sv_vcf.cpp
+    src/cluster.cpp
+    src/bin_map.cpp)
+
+target_include_directories(dbSV_merge PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vendor/htslib>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(dbSV_merge ${CMAKE_CURRENT_SOURCE_DIR}/vendor/htslib/libhts.a z m bz2 lzma pthread)
+

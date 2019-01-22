@@ -11,9 +11,9 @@
 class Cluster {
     public:
     Cluster() = default;
-    Cluster(std::shared_ptr<SV> &_sv);
-    std::shared_ptr<SV> cluster_represent;
-    std::vector<std::shared_ptr<SV>> SVs;
+    Cluster(const SV &_sv);
+    SV cluster_represent;
+    std::vector<SV> SVs;
     
     void merge(const SV &_sv);
     void merge(const Cluster &other);

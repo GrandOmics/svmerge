@@ -22,7 +22,7 @@ bool SV_intersect(const SV &SV1, const SV &SV2,
         return false;
     }
 
-    if (SV1.ref_name2 != SV2.ref_name2) {
+    if (SV1.ref_name1 != SV2.ref_name2 || SV1.ref_name2 != SV2.ref_name2) {
         return false;
     }
 

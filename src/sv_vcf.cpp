@@ -70,14 +70,27 @@ int get_sv_length(bcf_hdr_t *h_vcf, bcf1_t *v, int &sv_length) {
     if (ret1 < 0) {
         return ret1;
     } 
-    sv_length = *sv_len_ptr;
+    sv_length = abs(*sv_len_ptr);
     free(sv_len_ptr);
     return 0;
 }
 
+// get first sample name in the vcf file
+void get_first_vcf_sample(bcf_hdr_t *h_vcf, std::string &sample_name) {
+    int nsamples = bcf_hdr_nsamples(h_vcf);
+    if (nsamples < 1) {
+        fprintf(stderr, "[get_first_vcf_sample] Error! Less than one"
+            " sample in vcf header.\n");
+        std::exit(1);
+    } else if (nsamples > 1) {
+        fprintf(stderr, "[get_first_vcf_sample] Warning! More than one"
+            " sample in vcf header, only the first one is kept for merge.\n");
+    }
+    sample_name = h_vcf->samples[0];
+}
+
 int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
     bcf1_t *v = bcf_init();
-    valid = -1;
 
     int ret;
     while((ret = vcf_read1(fp_vcf, h_vcf, v)) >= 0) {
@@ -86,7 +99,8 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
         int pos1;
         std::string chrom2;
 
-        std::string sample = "TEST";
+        std::string sample;
+        get_first_vcf_sample(h_vcf, sample);
 
         // chrom and pos
         chrom1 = bcf_hdr_id2name(h_vcf, v->rid);
@@ -131,9 +145,9 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                 sv_enum_type = SVTYPE::INV;
             }
             
+            valid = 0;
             _sv = SV(chrom1, pos1, chrom1, sv_end, sv_enum_type,
                 sv_length, sample, v->d.id);
-            valid = 1;
         } else if (svtype == "TRA")
         {
             if ((ret1 = get_sv_end(h_vcf, v, sv_end)) < 0) {
@@ -145,9 +159,9 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
                 sv_length = 0; // TRA do not have lenght
             }
+            valid = 0;
             _sv = SV(chrom1, pos1, chrom1, sv_end, SVTYPE::TRA,
                 sv_length, sample, v->d.id);
-            valid = 1;
         } else if (svtype == "BND")
         {
             // only one allele exist in sv vcf file, 0: ref, 1: allele1
@@ -155,9 +169,9 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             BND bnd(bnd_str);
             sv_end = bnd.pos;
             if (bnd.chrom != chrom1) {
+                valid = 0;
                 _sv = SV(chrom1, pos1, bnd.chrom, bnd.pos,
                     SVTYPE::TRA, 0, sample, v->d.id);
-                valid = 1;
             } else if (bnd.type == BND_TYPE::T2 || bnd.type == BND_TYPE::T4) {
                 if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
                     fprintf(stderr, "[read_vcf] Warning! Can not get SVLEN from"
@@ -166,19 +180,21 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                     ret1 = 0; // reset ret
                     sv_length = abs(bnd.pos - pos1);
                 }
+                valid = 0;
                 _sv = SV(chrom1, pos1, bnd.chrom, bnd.pos,
                     SVTYPE::INV, sv_length, sample, v->d.id);
-                valid = 1;
             } else {
                 // Drop non-TRA and non-INV BND record
                 fprintf(stderr, "[read_vcf] Warning! Drop %s for SV ID:"
                     " %s\n, this BND record is neigther TRA nor INV.",
                     svtype.c_str(), v->d.id);
+                valid = -1;
             }
         } else // Drop Complex SV
         {
             fprintf(stderr, "[read_vcf] Warning! Drop complex SV %s for SV ID:"
                 " %s\n", svtype.c_str(), v->d.id);
+            valid = -1;
         }
         return ret;
     }

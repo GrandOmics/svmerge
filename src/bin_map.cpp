@@ -19,10 +19,10 @@ bin_map::~bin_map() {
 	free(_binOffsetsExtended);
 }
 
-int bin_map::update_bin_map(const Cluster &query_cluster)
+int bin_map::update_bin_map(const Cluster &query_cluster, const float max_diff, int32_t max_dist)
 {
-    const std::string &chr = query_cluster.cluster_represent->ref_name1;
-    const SVTYPE sv_type = query_cluster.cluster_represent->type;
+    const std::string &chr = query_cluster.cluster_represent.ref_name1;
+    const SVTYPE sv_type = query_cluster.cluster_represent.type;
 
 	main_map_type::iterator mainIter = _main_map.find(chr);
 	if (mainIter == _main_map.end()) {
@@ -44,19 +44,22 @@ int bin_map::update_bin_map(const Cluster &query_cluster)
     // expand query cluster 1000bp both side to handle intervals
     // near the bin boundary
     Cluster query_cluster_expand;
-    if (query_cluster.cluster_represent->pos1 > 1 << _binFirstShift) {
-        query_cluster_expand.cluster_represent->pos1 = query_cluster.cluster_represent->pos1 - 1000;
-        query_cluster_expand.cluster_represent->pos2 = query_cluster.cluster_represent->pos2 + 1000;
+    if (query_cluster.cluster_represent.pos1 > 1 << _binFirstShift) {
+        query_cluster_expand.cluster_represent.pos1 = query_cluster.cluster_represent.pos1 - 1000;
+        query_cluster_expand.cluster_represent.pos2 = query_cluster.cluster_represent.pos2 + 1000;
+    // } else if (query_cluster_expand.cluster_represent.pos2 == 0){ // prevent negative end
+    //     query_cluster_expand.cluster_represent.pos1 = query_cluster.cluster_represent.pos1;
+    //     ++query_cluster_expand.cluster_represent.pos2;
     } else {
-        query_cluster_expand.cluster_represent->pos1 = query_cluster.cluster_represent->pos1;
-        query_cluster_expand.cluster_represent->pos2 = query_cluster.cluster_represent->pos2;
-    }
+        query_cluster_expand.cluster_represent.pos1 = query_cluster.cluster_represent.pos1;
+        query_cluster_expand.cluster_represent.pos2 = query_cluster.cluster_represent.pos2;
+    } 
 
-    binNumType startPos = (binNumType)(query_cluster_expand.cluster_represent->pos1);
-    binNumType endPos = (binNumType)(query_cluster_expand.cluster_represent->pos2);
+    binNumType startPos = (binNumType)(query_cluster_expand.cluster_represent.pos1);
+    binNumType endPos = (binNumType)(query_cluster_expand.cluster_represent.pos2);
 
     binNumType startBin = (startPos >> _binFirstShift);
-    binNumType endBin = ((endPos-1) >> _binFirstShift);
+    binNumType endBin = ((endPos) >> _binFirstShift);
 
 
     /* SYNOPSIS:
@@ -81,11 +84,13 @@ int bin_map::update_bin_map(const Cluster &query_cluster)
         	cluster_list &bin = binsIter->second;
 
         	for (auto iter = bin.begin(); iter != bin.end(); ++iter) {
-            	if (query_cluster.intersect(*iter, 0.3, 1000))
+            	if (query_cluster.intersect(*iter, max_diff, max_dist))
                 {
                     // upater cluster in the bin map 
                     // only update the first matched cluster in the bin map
                     iter->merge(query_cluster);
+                    std::cerr << "INFO: merge: " 
+                        << query_cluster.cluster_represent.id << std::endl;
                     // std::cerr << "INFO: merge: " << iter->ref_name << ";"
                     //     << iter->start << ";"
                     //     << iter->end << ";"
@@ -101,11 +106,8 @@ int bin_map::update_bin_map(const Cluster &query_cluster)
         if (startBin == endBin && !is_add) {
             // add new cluster to the bin map
             index_map[offset+startBin].push_back(query_cluster);
-            // std::cerr << "INFO: add new: " 
-            //     << query_cluster.ref_name << ";"
-            //     << query_cluster.start << ";"
-            //     << query_cluster.end << ";"
-            //     << query_cluster.type << std::endl; 
+            std::cerr << "INFO: add new: " 
+                << query_cluster.cluster_represent.id << std::endl;
             is_add = true;
         }
         startBin >>= _binNextShift;
@@ -130,12 +132,12 @@ void bin_map::get_clusters(std::vector<Cluster> &clusters) {
 bool bin_map::add_to_bin_map(const Cluster &_cluster)
 {
 	// Get chr, bin.
-	const std::string &chr = _cluster.cluster_represent->ref_name1;
-    const SVTYPE &sv_type = _cluster.cluster_represent->type;
+	const std::string &chr = _cluster.cluster_represent.ref_name1;
+    const SVTYPE &sv_type = _cluster.cluster_represent.type;
 
     // cast uint32_t to int32_t, make sure that the pos num not exceed 2^31
-	binNumType startPos = (binNumType)(_cluster.cluster_represent->pos1);
-	binNumType endPos = (binNumType)(_cluster.cluster_represent->pos2);
+	binNumType startPos = (binNumType)(_cluster.cluster_represent.pos1);
+	binNumType endPos = (binNumType)(_cluster.cluster_represent.pos2);
 	binNumType binNum = getBin(startPos, endPos);
 
 	if (binNum < 0 || binNum > NUM_BINS) {
@@ -148,7 +150,7 @@ bool bin_map::add_to_bin_map(const Cluster &_cluster)
 }
 
 bin_map::binNumType bin_map::getBin(binNumType start, binNumType end) const {
-    --end;
+    // --end;
     start >>= _binFirstShift;
     end   >>= _binFirstShift;
 
