@@ -64,7 +64,6 @@ bool SV_overlap_fit(const SV &SV1, const SV &SV2, const float &min_overlap)
     if (overlap && (float)overlap/SV1.length >= min_overlap &&
         (float)overlap/SV2.length >= min_overlap)
     {
-        fprintf(stderr, "[test: overlap_fit] TRUE\n");
         return true;    
     } else {
         return false;
