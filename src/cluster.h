@@ -18,8 +18,8 @@ class Cluster {
     void merge(const SV &_sv);
     void merge(const Cluster &other);
 
-    bool intersect(const Cluster &other, const float max_diff,
-        int32_t max_dist) const;
+    bool intersect(const Cluster &other, const float &max_diff,
+        int32_t max_dist, const float &min_overlap) const;
 };
 
 #endif // CLUSTER_H

@@ -19,7 +19,8 @@ bin_map::~bin_map() {
 	free(_binOffsetsExtended);
 }
 
-int bin_map::update_bin_map(const Cluster &query_cluster, const float max_diff, int32_t max_dist)
+int bin_map::update_bin_map(const Cluster &query_cluster, const float &max_diff,
+    int32_t max_dist, const float &min_overlap)
 {
     const std::string &chr = query_cluster.cluster_represent.ref_name1;
     const SVTYPE sv_type = query_cluster.cluster_represent.type;
@@ -84,13 +85,14 @@ int bin_map::update_bin_map(const Cluster &query_cluster, const float max_diff, 
         	cluster_list &bin = binsIter->second;
 
         	for (auto iter = bin.begin(); iter != bin.end(); ++iter) {
-            	if (query_cluster.intersect(*iter, max_diff, max_dist))
+            	if (query_cluster.intersect(*iter, max_diff, max_dist,
+                    min_overlap))
                 {
                     // upater cluster in the bin map 
                     // only update the first matched cluster in the bin map
                     iter->merge(query_cluster);
-                    std::cerr << "INFO: merge: " 
-                        << query_cluster.cluster_represent.id << std::endl;
+                    // std::cerr << "INFO: merge: " 
+                    //     << query_cluster.cluster_represent.id << std::endl;
                     // std::cerr << "INFO: merge: " << iter->ref_name << ";"
                     //     << iter->start << ";"
                     //     << iter->end << ";"
@@ -106,8 +108,8 @@ int bin_map::update_bin_map(const Cluster &query_cluster, const float max_diff, 
         if (startBin == endBin && !is_add) {
             // add new cluster to the bin map
             index_map[offset+startBin].push_back(query_cluster);
-            std::cerr << "INFO: add new: " 
-                << query_cluster.cluster_represent.id << std::endl;
+            // std::cerr << "INFO: add new: " 
+            //     << query_cluster.cluster_represent.id << std::endl;
             is_add = true;
         }
         startBin >>= _binNextShift;

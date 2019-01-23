@@ -16,7 +16,7 @@ void SV::tra_pos_swap() {
 }
 
 bool SV_intersect(const SV &SV1, const SV &SV2,
-    const float max_diff, int32_t max_dist)
+    const float &max_diff, int32_t max_dist, const float &min_overlap)
 {
     if (SV1.type != SV2.type) {
         return false;
@@ -29,8 +29,9 @@ bool SV_intersect(const SV &SV1, const SV &SV2,
     if (SV1.type == SVTYPE::DEL || SV1.type == SVTYPE::DUP ||
         SV1.type == SVTYPE::INV)
     {
-        if (SV_overlap(SV1, SV2) && SV_size_fit(SV1, SV2, max_diff) &&
-            SV_dist_fit(SV1, SV2, max_dist)) {
+        if (SV_overlap_fit(SV1, SV2, min_overlap) &&
+            SV_size_fit(SV1, SV2, max_diff) && SV_dist_fit(SV1, SV2, max_dist))
+        {
             return true;
         }
     } else if (SV1.type == SVTYPE::TRA) {
@@ -46,12 +47,28 @@ bool SV_intersect(const SV &SV1, const SV &SV2,
     return false; 
 }
 
-bool SV_overlap(const SV &SV1, const SV &SV2)
+int SV_overlap(const SV &SV1, const SV &SV2)
 {
     if (SV1.pos1 > SV2.pos2 || SV1.pos2 < SV2.pos1) {
+        return 0;
+    } else {
+        int overlap_start = SV1.pos1 > SV2.pos1 ? SV1.pos1 : SV2.pos1;
+        int overlap_end = SV1.pos2 > SV2.pos2 ? SV2.pos2 : SV1.pos2;
+        return overlap_end - overlap_start + 1;
+    }
+}
+
+bool SV_overlap_fit(const SV &SV1, const SV &SV2, const float &min_overlap)
+{
+    int overlap = SV_overlap(SV1, SV2);
+    if (overlap && (float)overlap/SV1.length >= min_overlap &&
+        (float)overlap/SV2.length >= min_overlap)
+    {
+        fprintf(stderr, "[test: overlap_fit] TRUE\n");
+        return true;    
+    } else {
         return false;
     }
-    return true;
 }
 
 bool SV_size_fit(const SV &SV1, const SV &SV2, const float max_diff)

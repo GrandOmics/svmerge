@@ -22,7 +22,7 @@ public:
     * update bin map by update clusters in it or add new clusters to it
     */
 	int update_bin_map(const Cluster &query_cluster,
-		const float max_diff, int32_t max_dist);
+		const float &max_diff, int32_t max_dist, const float &min_overlap);
     void get_clusters(std::vector<Cluster> &clusters);
 
 private:

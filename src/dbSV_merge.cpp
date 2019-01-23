@@ -17,12 +17,13 @@ void usage() {
         << "-o, --output, FILE            output file [default: None]\n"
         << "-d, --max_distance, INT       maximum distance on both start and end posion of the SV [default: 1000]\n"
         << "-l, --max_length_diff, FLOAT  maximum SV length difference. [default 0.5]\n"
+        << "-r, --min_overlap, FLOAT      minimum SV overlap. [default 0.5]\n"
         << "-V, --version                 print version"
         << std::endl;
 }
 
-void sv_merge_cluster1(const char *vcf_fn, const float max_diff,
-    int max_dist, bin_map &_bin_map)
+void sv_merge_cluster1(const char *vcf_fn, const float &max_diff,
+    int max_dist, const float &min_overlap, bin_map &_bin_map)
 {
     vcfFile *fp_vcf = vcf_open(vcf_fn, "r");
     bcf_hdr_t *h_v = bcf_hdr_read(fp_vcf);
@@ -32,15 +33,15 @@ void sv_merge_cluster1(const char *vcf_fn, const float max_diff,
     while ((ret = read1_sv_vcf(fp_vcf, h_v, _sv, valid) >=0)) {
         if (valid >= 0) {
             Cluster cluster(_sv);
-            _bin_map.update_bin_map(cluster, max_diff, max_dist);
+            _bin_map.update_bin_map(cluster, max_diff, max_dist, min_overlap);
         }
     }
     bcf_hdr_destroy(h_v);
     vcf_close(fp_vcf);
 }
 
-void sv_merge(const char *vcf_fofn, char *out_fn, const float max_diff,
-    int max_dist)
+void sv_merge(const char *vcf_fofn, char *out_fn, const float &max_diff,
+    int max_dist, const float &min_overlap)
 {
     std::vector<std::string> vcfs;
     std::ifstream vcf_fofn_fp;
@@ -53,14 +54,18 @@ void sv_merge(const char *vcf_fofn, char *out_fn, const float max_diff,
     bin_map _bin_map = bin_map();
     
     for (const auto it: vcfs) {
-        sv_merge_cluster1(it.c_str(), max_diff, max_dist, _bin_map);
+        sv_merge_cluster1(it.c_str(), max_diff, max_dist, min_overlap,
+            _bin_map);
     }
 
     FILE *out_fp = fopen(out_fn, "w");
     std::vector<Cluster> clusters;
     _bin_map.get_clusters(clusters);
+    int n = 0;
     for (const auto it: clusters) {
+        ++n;
         for (const auto it1: it.SVs) {
+            fprintf(out_fp, "dbsv%d\t", n);
             it.cluster_represent.print(out_fp);
             fprintf(out_fp, "\t");
             it1.print(out_fp);
@@ -85,6 +90,7 @@ int main(int argc, char *argv[])
         {"output", required_argument, 0, 'o'},
         {"max_distance", required_argument, 0, 'd'},
         {"max_length_diff", required_argument, 0, 'l'},
+        {"min_overlap", required_argument, 0, 'r'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'V'}
     };
@@ -94,8 +100,11 @@ int main(int argc, char *argv[])
 
     char *vcf_fofn;
     char *output_fn;
+
+    // defaults
     int max_distance = 1000;
     float max_length_diff = 0.5;
+    float max_overlap = 0.5;
 
     // int getopt_long (int argc, char *const *argv, const char *shortopts,
     // const struct option *longopts, int *indexptr)
@@ -110,6 +119,8 @@ int main(int argc, char *argv[])
             max_distance = atoi(optarg);
         } else if (c == 'l') {
             max_length_diff = atof(optarg);
+        } else if (c == 'r') {
+            max_overlap = atof(optarg);
         } else if (c == 'h') {
             usage();
             return 0;
@@ -119,9 +130,9 @@ int main(int argc, char *argv[])
             return 0;
         }
         else {
-            std::cerr << "Invalid Arguments.";
+            std::cerr << "Invalid Arguments." << std::endl;
             std::exit(1);
         }
     }
-    sv_merge(vcf_fofn, output_fn, max_length_diff, max_distance);
+    sv_merge(vcf_fofn, output_fn, max_length_diff, max_distance, max_overlap);
 }
