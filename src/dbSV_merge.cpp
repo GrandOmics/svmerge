@@ -59,16 +59,16 @@ void sv_merge(const char *vcf_fofn, char *out_fn, const float &max_diff,
     }
 
     FILE *out_fp = fopen(out_fn, "w");
-    std::vector<Cluster> clusters;
+    std::vector<std::unique_ptr<Cluster>> clusters;
     _bin_map.get_clusters(clusters);
     int n = 0;
-    for (const auto it: clusters) {
+    for (std::vector<std::unique_ptr<Cluster>>::size_type i = 0; i < clusters.size(); ++i) {
         ++n;
-        for (const auto it1: it.SVs) {
+        for (const auto it: clusters[i]->SVs) {
             fprintf(out_fp, "dbsv%d\t", n);
-            it.cluster_represent.print(out_fp);
+            clusters[i]->cluster_represent.print(out_fp);
             fprintf(out_fp, "\t");
-            it1.print(out_fp);
+            it.print(out_fp);
             fprintf(out_fp, "\n");
         }
     }

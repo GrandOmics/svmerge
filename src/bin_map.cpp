@@ -119,12 +119,12 @@ int bin_map::update_bin_map(const Cluster &query_cluster, const float &max_diff,
     return -1;
 }
 
-void bin_map::get_clusters(std::vector<Cluster> &clusters) {
-    for (const auto &map1 : _main_map) {
-        for (const auto &map2 : map1.second) {
-            for (const auto &map3 : map2.second) {
-                for (const auto &_cluster : map3.second) {
-                    clusters.push_back(_cluster);
+void bin_map::get_clusters(std::vector<std::unique_ptr<Cluster>> &clusters) {
+    for (auto &map1 : _main_map) {
+        for (auto &map2 : map1.second) {
+            for (auto &map3 : map2.second) {
+                for (auto &_cluster : map3.second) {
+                    clusters.push_back(std::unique_ptr<Cluster>(new Cluster(_cluster)));
                 }
             }
         }
