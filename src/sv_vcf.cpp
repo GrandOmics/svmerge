@@ -157,6 +157,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             fprintf(stderr, "[get_svtype] Error! Can not get SVTYPE from SV: "
                 "%s, bcf_get_info_string return %d.\n", v->d.id, ret1);
             ret1 = 0; // reset ret
+            bcf_destroy(v);
             std::exit(1);
         }
 
@@ -166,6 +167,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             fprintf(stderr, "[get_sv_re] Error! Can not get RE from SV: %s,"
                 " bcf_get_info_int32 return %d.\n", v->d.id, ret1);
             ret1 = 0; // reset ret
+            bcf_destroy(v);
             std::exit(1);
         }
 
@@ -188,12 +190,14 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                 fprintf(stderr, "[read1_sv_vcf] Error! Can not get END from SV:"
                     " %s, bcf_get_info_int32 return %d.\n", v->d.id, ret1);
                 ret1 = 0; // reset ret
+                bcf_destroy(v);
                 std::exit(1);
             }
             if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
                 fprintf(stderr, "[read1_sv_vcf] Error! Can not get SVLEN from "
                     "SV: %s, bcf_get_info_int32 return %d.\n", v->d.id, ret1);
                 ret1 = 0; // reset ret
+                bcf_destroy(v);
                 std::exit(1);
             }
             SVTYPE sv_enum_type;
@@ -218,6 +222,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                 fprintf(stderr, "[read1_sv_vcf] Error! Can not get END from SV:"
                     " %s, bcf_get_info_int32 return %d.\n", v->d.id, ret1);
                 ret1 = 0; // reset ret
+                bcf_destroy(v);
                 std::exit(1);
             }
             if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
@@ -264,6 +269,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             fprintf(stderr, "[read1_sv_vcf] Warning! Drop complex SV %s for "
                 "SV ID: %s\n", svtype.c_str(), v->d.id);
         }
+        bcf_destroy(v);
         return ret;
     }
     bcf_destroy(v);
