@@ -9,11 +9,12 @@
 #include <string>
 
 enum class SVTYPE:uint8_t {DEL, INS, DUP, INV, TRA};
-const std::map<SVTYPE, std::string> svtype_map{{SVTYPE::DEL, "DEL"},
-                                                {SVTYPE::INS, "INS"},
-                                                {SVTYPE::DUP, "DUP"},
-                                                {SVTYPE::INV, "INV"},
-                                                {SVTYPE::TRA, "TRA"}}; 
+const std::map<SVTYPE, std::string>
+    svtype_map{{SVTYPE::DEL, "DEL"},
+        {SVTYPE::INS, "INS"},
+        {SVTYPE::DUP, "DUP"},
+        {SVTYPE::INV, "INV"},
+        {SVTYPE::TRA, "TRA"}}; 
 
 class SV {
     public:
