@@ -1,4 +1,5 @@
 #include "cluster.h"
+#include <iostream>
 
 Cluster::Cluster(const SV &_sv) {
     cluster_represent = _sv;
@@ -6,7 +7,8 @@ Cluster::Cluster(const SV &_sv) {
 }
 
 bool Cluster::intersect(const Cluster &other,
-    const float &max_diff, int32_t max_dist, const float &min_overlap) const {
+    const float &max_diff, int32_t max_dist, const float &min_overlap) const
+{
     if (SV_intersect(cluster_represent, other.cluster_represent,
         max_diff, max_dist, min_overlap))
     {

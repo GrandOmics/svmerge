@@ -45,7 +45,7 @@ class SV {
     }
 
     void print() const{
-        fprintf(stdout, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s",
+        fprintf(stderr, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s",
             ref_name1.c_str(), pos1, ref_name2.c_str(),
             pos2, svtype_map.find(type)->second.c_str(), length, sample.c_str(),
             id.c_str());
