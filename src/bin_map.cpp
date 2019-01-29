@@ -71,7 +71,7 @@ int bin_map::update_bin_map(const Cluster &query_cluster, const float &max_diff,
         3. If the query cluster do not match any cluster in all BINs, add it to
            the bin map and return 1;
     */
-    bool is_add = false; // used for memory if the query is added to the bin index
+
     for (binNumType i = 0; i < NUM_BIN_LEVELS; ++i) {
         binNumType offset = _binOffsetsExtended[i];
         for (binNumType j = (startBin+offset); j <= (endBin+offset); ++j)  {
@@ -105,18 +105,12 @@ int bin_map::update_bin_map(const Cluster &query_cluster, const float &max_diff,
             	}
             }
         }
-        if (startBin == endBin && !is_add) {
-            // add new cluster to the bin map
-            index_map[offset+startBin].push_back(query_cluster);
-            // std::cerr << "INFO: add new: " 
-            //     << query_cluster.cluster_represent.id << std::endl;
-            is_add = true;
-        }
         startBin >>= _binNextShift;
         endBin >>= _binNextShift;
     }
-    // out of range
-    return -1;
+    // new cluster
+    add_to_bin_map(query_cluster);
+    return 1;
 }
 
 void bin_map::get_clusters(std::vector<std::unique_ptr<Cluster>> &clusters) {
