@@ -108,7 +108,7 @@ void get_first_vcf_sample(bcf_hdr_t *h_vcf, std::string &sample_name) {
         std::exit(1);
     } else if (nsamples > 1) {
         fprintf(stderr, "[get_first_vcf_sample] Warning! More than one"
-            " sample in vcf header, only the first one is kept for merge.\n");
+            " sample in vcf header, only the first one will be kept for merge.\n");
     }
     sample_name = h_vcf->samples[0];
 }
@@ -264,11 +264,12 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                     " %s\n, this BND record is neigther TRA nor INV.\n",
                     svtype.c_str(), v->d.id);
             }
-        } else // Drop Complex SV
-        {
-            fprintf(stderr, "[read1_sv_vcf] Warning! Drop complex SV %s for "
-                "SV ID: %s\n", svtype.c_str(), v->d.id);
         }
+        // } else // Drop Complex SV
+        // {
+        //     fprintf(stderr, "[read1_sv_vcf] Warning! Drop complex SV %s for "
+        //         "SV ID: %s\n", svtype.c_str(), v->d.id);
+        // }
         bcf_destroy(v);
         return ret;
     }

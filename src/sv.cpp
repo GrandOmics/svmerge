@@ -37,6 +37,8 @@ bool SV_intersect(const SV &SV1, const SV &SV2,
     } else if (SV1.type == SVTYPE::TRA) {
         if (SV_dist_fit(SV1, SV2, max_dist)) {
             return true;
+        } else {
+            fprintf(stderr, "[TRA Merge test] %d.\n", max_dist);
         }
     } else {
         if (SV_size_fit(SV1, SV2, max_diff) && SV_dist_fit(SV1, SV2, max_dist))
