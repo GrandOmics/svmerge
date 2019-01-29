@@ -33,6 +33,9 @@ void sv_merge_cluster1(const char *vcf_fn, const float &max_diff,
     while ((ret = read1_sv_vcf(fp_vcf, h_v, _sv, valid) >=0)) {
         if (valid >= 0) {
             Cluster cluster(_sv);
+            if (_sv.sample == "BJXWZ-201812012.DM18A2553-1.ngmlr.hg19.merged.bam" && _sv.id == "521989") {
+                fprintf(stderr, "[test cluster bug] %s %s.\n", "BJXWZ-201812012.DM18A2553-1.ngmlr.hg19.merged.bam", "521989");
+            }
             _bin_map.update_bin_map(cluster, max_diff, max_dist, min_overlap);
         }
     }
