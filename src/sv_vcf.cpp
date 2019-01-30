@@ -207,6 +207,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                 sv_enum_type = SVTYPE::DUP;
             } else if (svtype == "INS") {
                 sv_enum_type = SVTYPE::INS;
+                sv_end = pos1; // force INS END = INS START to fix sniffles INS END bug
             } else {
                 sv_enum_type = SVTYPE::INV;
             }
