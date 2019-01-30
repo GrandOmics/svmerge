@@ -87,10 +87,6 @@ bool SV_dist_fit(const SV &SV1, const SV &SV2, int32_t max_dist)
     int32_t dist1 = (int32_t)(SV1.pos1 - SV2.pos1);
     int32_t dist2 = (int32_t)(SV1.pos2 - SV2.pos2);
 
-    if (SV1.length != 0 && 2*SV1.length < max_dist) {
-        max_dist = 2*SV1.length;
-    }
-
     if (abs(dist1) < max_dist && abs(dist2) < max_dist) {
         return true;
     }
