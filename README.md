@@ -23,7 +23,7 @@ cmake ..
 make
 ```
 
-A excutable file `dbSV_merge` will be generated in build/bin directory. You may copy `dbSV_merge` to your `PATH`.
+An executable binary file `dbSV_merge` will be generated in build/bin directory. You may copy `dbSV_merge` to your `PATH`.
 
 ## Usage
 
