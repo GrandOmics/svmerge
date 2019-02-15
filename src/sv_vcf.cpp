@@ -75,30 +75,6 @@ int get_sv_length(bcf_hdr_t *h_vcf, bcf1_t *v, int &sv_length) {
     return 0;
 }
 
-int get_sv_re(bcf_hdr_t *h_vcf, bcf1_t *v, int &re) {
-    int n1 = 0;
-    int32_t *re_prt = NULL;
-    int ret1 = bcf_get_info_int32(h_vcf, v, "RE", &re_prt, &n1);
-    if (ret1 < 0) {
-        return ret1;
-    } 
-    re = *re_prt;
-    free(re_prt);
-    return 0;
-}
-
-int get_sv_af(bcf_hdr_t *h_vcf, bcf1_t *v, float &af) {
-    int n1 = 0;
-    float *af_prt = NULL;
-    int ret1 = bcf_get_info_float(h_vcf, v, "AF", &af_prt, &n1);
-    if (ret1 < 0) {
-        return ret1;
-    } 
-    af = *af_prt;
-    free(af_prt);
-    return 0;
-}
-
 // get first sample name in the vcf file
 void get_first_vcf_sample(bcf_hdr_t *h_vcf, std::string &sample_name) {
     int nsamples = bcf_hdr_nsamples(h_vcf);
@@ -111,23 +87,6 @@ void get_first_vcf_sample(bcf_hdr_t *h_vcf, std::string &sample_name) {
             " sample in vcf header, only the first one will be kept for merge.\n");
     }
     sample_name = h_vcf->samples[0];
-}
-
-// filter sv record
-// re: read evidence, support reads number
-// af: allele frequency
-// len: length
-// if -1 is passed to the parameter above, means that
-// not filter by the parameter
-bool sv_filter(const int &re, const float &af, const int &len, 
-    const int &min_re, const float &min_af, const int &min_len)
-{
-    if ((af == -1 || af >= min_af) && (re == -1 || re >= min_re) &&
-        (len == -1 || len >= min_len)) {
-        return true;
-    } else {
-        return false;
-    }
 }
 
 int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
@@ -159,25 +118,6 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             ret1 = 0; // reset ret
             bcf_destroy(v);
             std::exit(1);
-        }
-
-        // re
-        int re;
-        if ((ret1 = get_sv_re(h_vcf, v, re)) < 0) {
-            fprintf(stderr, "[get_sv_re] Error! Can not get RE from SV: %s,"
-                " bcf_get_info_int32 return %d.\n", v->d.id, ret1);
-            ret1 = 0; // reset ret
-            bcf_destroy(v);
-            std::exit(1);
-        }
-
-        // af
-        float af;
-        if ((ret1 = get_sv_af(h_vcf, v, af)) < 0) {
-            fprintf(stderr, "[get_sv_af] Warning! Can not get AF from SV: %s,"
-                " bcf_get_info_int32 return %d.\n", v->d.id, ret1);
-            ret1 = 0; // reset ret
-            af = -1; // not filter by af
         }
         
         int sv_end;
@@ -214,9 +154,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             
             _sv = SV(chrom1, pos1, chrom1, sv_end, sv_enum_type,
                 sv_length, sample, v->d.id);
-            if (sv_filter(re, af, sv_length, 2, 0.15, 30)) {
-                valid = 0;
-            }
+            valid = 0;
         } else if (svtype == "TRA")
         {
             if ((ret1 = get_sv_end(h_vcf, v, sv_end)) < 0) {
@@ -231,9 +169,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             }
             _sv = SV(chrom1, pos1, chrom1, sv_end, SVTYPE::TRA,
                 sv_length, sample, v->d.id);
-            if (sv_filter(re, af, sv_length, 2, 0.15, 30)) {
-                valid = 0;
-            }
+            valid = 0;
         } else if (svtype == "BND")
         {
             // only one allele exist in sv vcf file, 0: ref, 1: allele1
@@ -243,22 +179,18 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             if (bnd.chrom != chrom1) {
                 _sv = SV(chrom1, pos1, bnd.chrom, bnd.pos,
                     SVTYPE::TRA, 0, sample, v->d.id);
-                if (sv_filter(re, af, -1, 2, 0.15, 30)) {
-                    valid = 0;
-                }
+                valid = 0;
             } else if (bnd.type == BND_TYPE::T2 || bnd.type == BND_TYPE::T4) {
                 if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
-                    fprintf(stderr, "[read1_sv_vcf] Warning! Can not get SVLEN"
-                        " from BND(INV) SV: %s, bcf_get_info_int32 return %d.\n",
-                        v->d.id, ret1);
+                    // fprintf(stderr, "[read1_sv_vcf] Warning! Can not get SVLEN"
+                    //     " from BND(INV) SV: %s, bcf_get_info_int32 return %d.\n",
+                    //     v->d.id, ret1);
                     ret1 = 0; // reset ret
                     sv_length = abs(bnd.pos - pos1);
                 }
                 _sv = SV(chrom1, pos1, bnd.chrom, bnd.pos,
                     SVTYPE::INV, sv_length, sample, v->d.id);
-                if (sv_filter(re, af, sv_length, 2, 0.15, 30)) {
-                    valid = 0;
-                }
+                valid = 0;
             } else {
                 // Drop non-TRA and non-INV BND record
                 fprintf(stderr, "[read1_sv_vcf] Warning! Drop %s for SV ID:"
@@ -266,11 +198,6 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                     svtype.c_str(), v->d.id);
             }
         }
-        // } else // Drop Complex SV
-        // {
-        //     fprintf(stderr, "[read1_sv_vcf] Warning! Drop complex SV %s for "
-        //         "SV ID: %s\n", svtype.c_str(), v->d.id);
-        // }
         bcf_destroy(v);
         return ret;
     }
