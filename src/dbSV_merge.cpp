@@ -50,6 +50,7 @@ void sv_merge(const char *vcf_fofn, char *out_fn, const float &max_diff,
     while (getline(vcf_fofn_fp, vcf_fn)) {
         vcfs.push_back(vcf_fn);
     }
+    vcf_fofn_fp.close();
 
     bin_map _bin_map = bin_map();
     
