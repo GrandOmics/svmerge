@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     };
 
     int c, long_idx;
-    const char *opt_str = "f:o:d:l:hV";
+    const char *opt_str = "f:o:d:l:r:hV";
 
     char *vcf_fofn;
     char *output_fn;
