@@ -46,8 +46,8 @@ int bin_map::update_bin_map(const Cluster &query_cluster, const float &max_diff,
     // near the bin boundary
     Cluster query_cluster_expand;
     if (query_cluster.cluster_represent.pos1 > 1 << _binFirstShift) {
-        query_cluster_expand.cluster_represent.pos1 = query_cluster.cluster_represent.pos1 - 1000;
-        query_cluster_expand.cluster_represent.pos2 = query_cluster.cluster_represent.pos2 + 1000;
+        query_cluster_expand.cluster_represent.pos1 = query_cluster.cluster_represent.pos1 - max_dist;
+        query_cluster_expand.cluster_represent.pos2 = query_cluster.cluster_represent.pos2 + max_dist;
     // } else if (query_cluster_expand.cluster_represent.pos2 == 0){ // prevent negative end
     //     query_cluster_expand.cluster_represent.pos1 = query_cluster.cluster_represent.pos1;
     //     ++query_cluster_expand.cluster_represent.pos2;
