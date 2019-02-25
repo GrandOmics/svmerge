@@ -1,9 +1,11 @@
 #include "sv.h"
 
 SV::SV(std::string _ref_name1, int _pos1, std::string _ref_name2,
-    int _pos2, SVTYPE _type, int _length, std::string _sample, std::string _id):
+    int _pos2, SVTYPE _type, int _length, std::string _sample, std::string _id,
+    std::string _genotype):
     ref_name1(_ref_name1), pos1(_pos1), ref_name2(_ref_name2),
-    pos2(_pos2), type(_type), length(_length), sample(_sample), id(_id)
+    pos2(_pos2), type(_type), length(_length), sample(_sample), id(_id),
+    genotype(_genotype)
 {
     tra_pos_swap();
 }

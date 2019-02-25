@@ -21,7 +21,7 @@ class SV {
     SV() = default;
     SV(std::string _ref_name1, int _pos1, std::string _ref_name2,
         int _pos2, SVTYPE _type, int _length, std::string _sample,
-        std::string id);
+        std::string _id, std::string _genotype);
 
     ~SV(){}
 
@@ -35,13 +35,15 @@ class SV {
     std::string sample;
     std::string id;
 
+    std::string genotype;
+
     void tra_pos_swap();
 
     void print(FILE *fp) const{
-        fprintf(fp, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s",
+        fprintf(fp, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s\t%s",
             ref_name1.c_str(), pos1, ref_name2.c_str(),
             pos2, svtype_map.find(type)->second.c_str(), length, sample.c_str(),
-            id.c_str());
+            id.c_str(), genotype.c_str());
     }
 
     void print() const{

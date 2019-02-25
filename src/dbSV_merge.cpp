@@ -66,8 +66,7 @@ void sv_merge(const char *vcf_fofn, char *out_fn, const float &max_diff,
     for (std::vector<std::unique_ptr<Cluster>>::size_type i = 0; i < clusters.size(); ++i) {
         ++n;
         for (const auto it: clusters[i]->SVs) {
-            fprintf(out_fp, "dbsv%d", n);
-            fprintf(out_fp, "\t");
+            fprintf(out_fp, "dbsv%d\t", n);
             it.print(out_fp);
             fprintf(out_fp, "\n");
         }

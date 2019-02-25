@@ -75,6 +75,18 @@ int get_sv_length(bcf_hdr_t *h_vcf, bcf1_t *v, int &sv_length) {
     return 0;
 }
 
+int get_sv_genotype(bcf_hdr_t *h_vcf, bcf1_t *v, std::string &sv_gt) {
+    int n1 = 0;
+    char *sv_gt_cstr = NULL;
+    int ret1 = bcf_get_genotypes(h_vcf, v, sv_gt_cstr, &n1);
+    if (ret1 < 0) {
+        return ret1;
+    }
+    sv_gt = sv_gt_cstr;
+    free(sv_gt_cstr);
+    return 0;
+}
+
 // get first sample name in the vcf file
 void get_first_vcf_sample(bcf_hdr_t *h_vcf, std::string &sample_name) {
     int nsamples = bcf_hdr_nsamples(h_vcf);
@@ -123,6 +135,14 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
         int sv_end;
         int sv_length;
 
+        std::string _genotype;
+        if ((ret1 = get_sv_genotype(h_vcf, v, _genotype) < 0)) {
+            fprintf(stderr, "[read1_sv_vcf] Warning! Can not get GT from "
+                "SV: %s, bcf_get_genotypes return %d.\n", v->d.id, ret1);
+            ret1 = 0; // reset ret
+            _genotype = "./."; // set gt as "./."
+        }
+
         if (svtype == "DEL" || svtype == "DUP" || svtype == "INS"
             || svtype == "INV")
         {
@@ -153,7 +173,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             }
             
             _sv = SV(chrom1, pos1, chrom1, sv_end, sv_enum_type,
-                sv_length, sample, v->d.id);
+                sv_length, sample, v->d.id, _genotype);
             valid = 0;
         } else if (svtype == "TRA")
         {
@@ -168,7 +188,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                 sv_length = -1; // TRA do not have lenght
             }
             _sv = SV(chrom1, pos1, chrom1, sv_end, SVTYPE::TRA,
-                sv_length, sample, v->d.id);
+                sv_length, sample, v->d.id, _genotype);
             valid = 0;
         } else if (svtype == "BND")
         {
@@ -178,7 +198,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             sv_end = bnd.pos;
             if (bnd.chrom != chrom1) {
                 _sv = SV(chrom1, pos1, bnd.chrom, bnd.pos,
-                    SVTYPE::TRA, 0, sample, v->d.id);
+                    SVTYPE::TRA, 0, sample, v->d.id, _genotype);
                 valid = 0;
             } else if (bnd.type == BND_TYPE::T2 || bnd.type == BND_TYPE::T4) {
                 if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
@@ -189,7 +209,7 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
                     sv_length = abs(bnd.pos - pos1);
                 }
                 _sv = SV(chrom1, pos1, bnd.chrom, bnd.pos,
-                    SVTYPE::INV, sv_length, sample, v->d.id);
+                    SVTYPE::INV, sv_length, sample, v->d.id, _genotype);
                 valid = 0;
             } else {
                 // Drop non-TRA and non-INV BND record
