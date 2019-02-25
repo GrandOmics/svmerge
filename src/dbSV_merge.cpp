@@ -18,7 +18,8 @@ void usage() {
         << "-d, --max_distance, INT       maximum distance on both start and end posion of the SV [default: 1000]\n"
         << "-l, --max_length_diff, FLOAT  maximum SV length difference. [default 0.5]\n"
         << "-r, --min_overlap, FLOAT      minimum SV overlap. [default 0.5]\n"
-        << "-V, --version                 print version"
+        << "-g, --show_genotype           show genotype in out put file. [default FALSE]\n"
+        << "-V, --version                 print version."
         << std::endl;
 }
 
@@ -41,7 +42,7 @@ void sv_merge_cluster1(const char *vcf_fn, const float &max_diff,
 }
 
 void sv_merge(const char *vcf_fofn, char *out_fn, const float &max_diff,
-    int max_dist, const float &min_overlap)
+    int max_dist, const float &min_overlap, const bool &show_gt)
 {
     std::vector<std::string> vcfs;
     std::ifstream vcf_fofn_fp;
@@ -67,7 +68,17 @@ void sv_merge(const char *vcf_fofn, char *out_fn, const float &max_diff,
         ++n;
         for (const auto it: clusters[i]->SVs) {
             fprintf(out_fp, "dbsv%d\t", n);
-            it.print(out_fp);
+            if (show_gt) {
+                fprintf(out_fp, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s\t%s",
+                    it.ref_name1.c_str(), it.pos1, it.ref_name2.c_str(), it.pos2,
+                    svtype_map.find(it.type)->second.c_str(), it.length,
+                    it.sample.c_str(), it.id.c_str(), it.genotype.c_str());
+            } else {
+                fprintf(out_fp, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s",
+                    it.ref_name1.c_str(), it.pos1, it.ref_name2.c_str(), it.pos2,
+                    svtype_map.find(it.type)->second.c_str(), it.length,
+                    it.sample.c_str(), it.id.c_str()); 
+            }
             fprintf(out_fp, "\n");
         }
     }
@@ -90,12 +101,13 @@ int main(int argc, char *argv[])
         {"max_distance", required_argument, 0, 'd'},
         {"max_length_diff", required_argument, 0, 'l'},
         {"min_overlap", required_argument, 0, 'r'},
+        {"show_genotype", no_argument, 0, 'g'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'V'}
     };
 
     int c, long_idx;
-    const char *opt_str = "f:o:d:l:r:hV";
+    const char *opt_str = "f:o:d:l:r:ghV";
 
     char *vcf_fofn;
     char *output_fn;
@@ -104,6 +116,7 @@ int main(int argc, char *argv[])
     int max_distance = 1000;
     float max_length_diff = 0.5;
     float max_overlap = 0.5;
+    bool show_gt = false;
 
     // int getopt_long (int argc, char *const *argv, const char *shortopts,
     // const struct option *longopts, int *indexptr)
@@ -120,6 +133,8 @@ int main(int argc, char *argv[])
             max_length_diff = atof(optarg);
         } else if (c == 'r') {
             max_overlap = atof(optarg);
+        } else if (c == 'g') {
+            show_gt = true;
         } else if (c == 'h') {
             usage();
             return 0;
@@ -133,5 +148,6 @@ int main(int argc, char *argv[])
             std::exit(1);
         }
     }
-    sv_merge(vcf_fofn, output_fn, max_length_diff, max_distance, max_overlap);
+    sv_merge(vcf_fofn, output_fn, max_length_diff, max_distance,
+        max_overlap, show_gt);
 }

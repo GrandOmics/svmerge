@@ -39,13 +39,6 @@ class SV {
 
     void tra_pos_swap();
 
-    void print(FILE *fp) const{
-        fprintf(fp, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s\t%s",
-            ref_name1.c_str(), pos1, ref_name2.c_str(),
-            pos2, svtype_map.find(type)->second.c_str(), length, sample.c_str(),
-            id.c_str(), genotype.c_str());
-    }
-
     void print() const{
         fprintf(stderr, "%s\t%d\t%s\t%d\t%s\t%d\t%s\t%s",
             ref_name1.c_str(), pos1, ref_name2.c_str(),
