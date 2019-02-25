@@ -18,7 +18,7 @@ void usage() {
         << "-d, --max_distance, INT       maximum distance on both start and end posion of the SV [default: 1000]\n"
         << "-l, --max_length_diff, FLOAT  maximum SV length difference. [default 0.5]\n"
         << "-r, --min_overlap, FLOAT      minimum SV overlap. [default 0.5]\n"
-        << "-g, --show_genotype           show genotype in out put file. [default FALSE]\n"
+        << "-g, --show_genotype           show genotype in output file. [default FALSE]\n"
         << "-V, --version                 print version."
         << std::endl;
 }
