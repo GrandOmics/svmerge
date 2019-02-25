@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <stdio.h>
 
 #include "sv.h"
 #include "yutils.h"
@@ -76,14 +77,53 @@ int get_sv_length(bcf_hdr_t *h_vcf, bcf1_t *v, int &sv_length) {
 }
 
 int get_sv_genotype(bcf_hdr_t *h_vcf, bcf1_t *v, std::string &sv_gt) {
+    
     int n1 = 0;
-    char *sv_gt_cstr = NULL;
-    int ret1 = bcf_get_genotypes(h_vcf, v, sv_gt_cstr, &n1);
+    int32_t *gt_arr = NULL;
+    
+    int ret1 = bcf_get_genotypes(h_vcf, v, &gt_arr, &n1);
+    
     if (ret1 < 0) {
         return ret1;
     }
-    sv_gt = sv_gt_cstr;
-    free(sv_gt_cstr);
+    int nsmpl = bcf_hdr_nsamples(h_vcf);
+
+    int max_ploidy = ret1/nsmpl;
+    // gt of the first sample
+    int32_t *ptr = gt_arr;
+    char aChar[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    int is_phased = 0;
+    std::vector<char> gt_tmp;
+    for (int i = 0; i < max_ploidy; ++i) {
+        if (ptr[i]==bcf_int32_vector_end) {
+            break;
+        }
+        if (bcf_gt_is_missing(ptr[i])) {
+            gt_tmp.push_back('.');
+            continue;
+        }
+        int allele_index = bcf_gt_allele(ptr[i]);
+
+        is_phased = bcf_gt_is_phased(ptr[i]);
+
+        gt_tmp.push_back(aChar[allele_index]);
+    }
+
+    char sep = '/';
+    if (is_phased) {
+        sep = '|';
+    }
+
+    std::string gt_tmp_str;
+    for (auto begin = gt_tmp.begin(); begin != gt_tmp.end() - 1; ++begin) {
+        gt_tmp_str += *begin;
+        gt_tmp_str += sep;
+    }
+    gt_tmp_str += *(gt_tmp.end()-1);
+
+    sv_gt = gt_tmp_str;
+
+    free(gt_arr);
     return 0;
 }
 
