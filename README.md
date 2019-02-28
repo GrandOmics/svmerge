@@ -39,7 +39,8 @@ Options:
 -d, --max_distance, INT       maximum distance on both start and end posion of the SV [default: 1000]
 -l, --max_length_diff, FLOAT  maximum SV length difference. [default 0.5]
 -r, --min_overlap, FLOAT      minimum SV overlap. [default 0.5]
--V, --version                 print version
+-g, --show_genotype           show genotype in out put file. [default FALSE]
+-V, --version                 print version.
 ```
 
 ## Output
