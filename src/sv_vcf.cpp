@@ -52,6 +52,18 @@ int get_svtype(bcf_hdr_t *h_vcf, bcf1_t *v, std::string &svtype_str) {
     return 0;
 }
 
+int get_chr2(bcf_hdr_t *h_vcf, bcf1_t *v, std::string &chr2_str) {
+    int n1 = 0;
+    char *chr2 = NULL;
+    int ret1 = bcf_get_info_string(h_vcf, v, "CHR2", &chr2, &n1);
+    if (ret1 < 0) {
+        return ret1;
+    } 
+    chr2_str = chr2;
+    free(chr2);
+    return 0;
+}
+
 int get_sv_end(bcf_hdr_t *h_vcf, bcf1_t *v, int &sv_end) {
     int n1 = 0;
     int32_t *sv_end_prt = NULL;
@@ -226,8 +238,18 @@ int read1_sv_vcf(vcfFile *fp_vcf, bcf_hdr_t *h_vcf, SV &_sv, int &valid) {
             }
             if ((ret1 = get_sv_length(h_vcf, v, sv_length)) < 0) {
                 sv_length = -1; // TRA do not have lenght
+                ret1 = 0; // reset ret
             }
-            _sv = SV(chrom1, pos1, chrom1, sv_end, SVTYPE::TRA,
+
+            if ((ret1 = get_chr2(h_vcf, v, chrom2)) < 0) {
+                fprintf(stderr, "[read1_sv_vcf] Error! Can not get CHR2 from SV:"
+                    " %s, bcf_get_info_string return %d.\n", v->d.id, ret1);
+                ret1 = 0; // reset ret
+                bcf_destroy(v);
+                std::exit(1);
+            }
+
+            _sv = SV(chrom1, pos1, chrom2, sv_end, SVTYPE::TRA,
                 sv_length, sample, v->d.id, _genotype);
             valid = 0;
         } else if (svtype == "BND")
