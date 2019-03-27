@@ -25,7 +25,7 @@ bool SV_intersect(const SV &SV1, const SV &SV2,
     }
 
     if (SV1.type != SVTYPE::TRA &&
-        (SV1.ref_name1 != SV2.ref_name2 || SV1.ref_name2 != SV2.ref_name2))
+        (SV1.ref_name1 != SV2.ref_name1 || SV1.ref_name2 != SV2.ref_name2))
     {
         return false;
     }
@@ -39,7 +39,9 @@ bool SV_intersect(const SV &SV1, const SV &SV2,
             return true;
         }
     } else if (SV1.type == SVTYPE::TRA) {
-        if (SV_dist_fit(SV1, SV2, max_dist)) {
+        if (SV_dist_fit(SV1, SV2, max_dist) &&
+            SV1.ref_name1 == SV2.ref_name1 && SV1.ref_name2 == SV2.ref_name2)
+        {
             return true;
         }
     } else {
